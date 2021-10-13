@@ -26,7 +26,7 @@ import pyttsx3
 import webbrowser
 from bs4 import BeautifulSoup
 
-app_id = "WY4XT3-LETPK9V99W"
+app_id = ""#enter your appid from wolframalpha website
 #api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 #Seting test to speech
 engine = pyttsx3.init('sapi5')
