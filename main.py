@@ -13,6 +13,7 @@ import pyautogui
 import pywhatkit
 from PIL import Image
 from PyQt5 import QtWidgets, QtCore, QtGui
+import wolframalpha
 from PyQt5.QtCore import QTimer, QTime, QDate, Qt
 from PyQt5.QtGui import QMovie
 from PyQt5.QtCore import *
@@ -23,7 +24,10 @@ from Jarvis.features.gui import Ui_MainWindow
 import pyfirmata
 import pyttsx3
 import webbrowser
+from bs4 import BeautifulSoup
 
+app_id = "WY4XT3-LETPK9V99W"
+#api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 #Seting test to speech
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
@@ -33,6 +37,10 @@ def speak(audio):
    engine.say(audio)
    engine.runAndWait()
 
+def subscribe():
+    webbrowser.open("https://www.youtube.com/channel/UC5N_8t5SzEyJrTx1bC66Kpw?sub_confirmation=1")
+    speak("Sorry Sir Owner will make it automatically soon for any other feature contact on email")
+    webbrowser.open("mailto:semalalikithsai@gmail.com")
 def startup():
     speak("Initializing Jarvis")
     speak("Starting all systems applications")
@@ -50,12 +58,23 @@ def startup():
     else:
         speak("Good evening")
     speak("Jarvis is online")
+    speak("Sir or Mamdam Please Subscribe To Owner Channel To support Owner Do you Want Subscribe")
+    Answer = obj.mic_input()
+    if "yes" in Answer:
+        speak("thank you sir")
+        subscribe()
+        startExecution.start()
+    else:
+        speak("sorry sir, if you want you can by saying i am satisfied")
+        startExecution.start()
+
+
 
 obj = JarvisAssistant()
 
 #Memory
 GREETINGS = ["hello jarvis", "jarvis", "wake up jarvis", "you there jarvis", "time to work jarvis", "hey jarvis",
-             "ok jarvis", "are you there"]
+             "ok jarvis", "are you there", "hey there"]
 GREETINGS_RES = ["always there for you sir", "i am ready sir",
                  "your wish my command", "how can i help you sir?", "i am online and ready sir"]
 
@@ -88,11 +107,25 @@ class MainThread(QThread):
                 print(date)
                 speak(date)
 
+            elif "i am satisfied" in command:
+                speak("Thank you sir")
+                subscribe()
+                startExecution.start()
+
             elif "time" in command:
                 time_c = obj.tell_time()
                 print(time_c)
                 speak(f"Sir the time is {time_c}")
 
+            elif "weather" in command:
+                speak("what is your city name")
+                city = obj.mic_input()
+                fullcommand = "temperature in"+city
+                url = f"www.google.com/search?q={fullcommand}"
+                r = requests.get(url)
+                data = BeautifulSoup(r.txt,"html.parser")
+                temp = data.find("div",class_="BNewe").txt
+                speak(f"current {fullcommand} is {temp}")
             elif re.search('launch', command):
                 dict_app = {
                     'chrome': 'C:/Program Files/Google/Chrome/Application/chrome'
@@ -117,12 +150,6 @@ class MainThread(QThread):
                 open_result = obj.website_opener(domain)
                 speak(f'Alright sir !! Opening {domain}')
                 print(open_result)
-
-            elif re.search('weather', command):
-                city = command.split(' ')[-1]
-                weather_res = obj.weather(city=city)
-                print(weather_res)
-                speak(weather_res)
 
             elif re.search('tell me about', command):
                 topic = command.split(' ')[-1]
@@ -159,11 +186,27 @@ class MainThread(QThread):
                 speak(f"Okay sir, playing {video} on youtube")
                 pywhatkit.playonyt(video)
 
-            if "make a note" in command or "write this down" in command or "remember this" in command:
-                speak("What would you like me to write down?")
-                note_text = obj.mic_input()
-                obj.take_note(note_text)
-                speak("I've made a note of that")
+            if "note" in command or "write" in command or "remember" in command:
+                speak("What Hint do you want to put for note")
+                speak("for Example to make a note on car keys")
+                nameoffile = obj.mic_input()
+                f = open(nameoffile + ".txt",'w')
+                note = obj.mic_input()
+                speak("Sir is this right if yes say right")
+                speak(note)
+                answerfornote = obj.mic_input
+                if "right" in answerfornote:
+                    speak("Trying to save")
+                    f.write(note)
+                    f.close()
+                    speak("Saved Sir")
+                else:
+                    speak("i will try again to understand")
+                    speak("What Hint do you want to put for note")
+                    speak("for Example to make a note on car keys")
+                    nameoffile = obj.mic_input()
+                    f = open(nameoffile + ".txt",'w')
+                    note = obj.mic_input()
 
             elif "close the note" in command or "close notepad" in command:
                 speak("Okay sir, closing notepad")
@@ -178,6 +221,12 @@ class MainThread(QThread):
                 sys_info = obj.system_info()
                 print(sys_info)
                 speak(sys_info)
+
+            elif "search in google" in command:
+                speak("What do you want to search")
+                searchforgoogle = obj.mic_input()
+                urlforgoogle = f"www.google.com/search?q={searchforgoogle}"
+                webbrowser.open(urlforgoogle)
 
             elif "where is" in command:
                 place = command.split('where is ', 1)[1]
@@ -294,7 +343,7 @@ class MainThread(QThread):
 
             elif 'youtube channel' in command:
                 speak("opening youtube channel hackers are here where are you")
-                webbrowser.open("https://www.youtube.com/channel/UC5N_8t5SzEyJrTx1bC66Kpw")
+                webbrowser.open("https://www.youtube.com/channel/UC5N_8t5SzEyJrTx1bC66Kpw?sub_confirmation=1")
 
             elif 'email to owner of project' in command:
                 speak("ok sir")
@@ -304,15 +353,24 @@ class MainThread(QThread):
                 speak("narendra modi is prime minester of india") 
                 
             else:
-
-                speak('Searching Wikipedia...')
-                query = query.replace("wikipedia", "")
-                results = wikipedia.summary(query, sentences=2)
-                speak("According to Wikipedia")
-                print("According to Wikipedia")
-                print(results)
-                speak(results)
-                startExecution.start()
+                try:
+                    client = wolframalpha.Client(app_id)
+                    res = client.query(command)
+                    answer = next(res.results).text
+                    speak(answer)
+                except:
+                    try:
+                        notepadfile = command+"txt"
+                        subprocess.Popen("notepad"+notepadfile)
+                    except:
+                        speak('Searching Wikipedia...')
+                        query = query.replace("wikipedia", "")
+                        results = wikipedia.summary(query, sentences=2)
+                        speak("According to Wikipedia")
+                        print("According to Wikipedia")
+                        print(results)
+                        speak(results)
+                        startExecution.start()
 
 startExecution = MainThread()
 
